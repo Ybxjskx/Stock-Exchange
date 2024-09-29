@@ -1,4 +1,7 @@
-#include "StockExchange.h"
+#ifndef CLIENT_H
+#define CLIENT_H
+
+#include "../StockExchange.hpp"
 
 namespace yaniv
 {
@@ -28,3 +31,5 @@ public:
 };
 
 }
+
+#endif

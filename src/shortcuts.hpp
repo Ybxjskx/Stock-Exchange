@@ -1,8 +1,9 @@
+#ifndef SHORTCUTS_H
+#define SHORTCUTS_H
+
 #include <queue>
 #include <string>
 
-#ifndef SHORTCUTS_H
-#define SHORTCUTS_H
 namespace yaniv
 {
 

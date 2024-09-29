@@ -1,5 +1,4 @@
-#include "Client.h"
-#include "RegisteredUser.h"
+#include "Client.hpp"
 #include <iostream>
 
 namespace yaniv
@@ -12,7 +11,7 @@ namespace yaniv
         }
         catch(std::invalid_argument e)
         {
-            std::clog<< "there is a problem" << std::endl;  
+            std::clog<< "there is a problem wuth adding money to user: " << id << std::endl;  
         }
     }
 
@@ -32,34 +31,37 @@ namespace yaniv
         }
         catch(...)
         {
-            std::cout<< "there is unexcepted problem " << std::endl;
+            std::cout<< "there is unexcepted problem" << std::endl;
         }
     }
 
     void Client::how_much_money_had()
     {
-        return this -> stock_exchange.get_money();
+        return this -> stock_exchange.get_money(id);
     }
 
     void Client::bid_market(CompanySymbol& company_symbol,stock_amount stocks_num, currency_amount total_money)
     {
-        this -> stock_exchange.bid_market(company_symbol,stocks_num, total_money);
+        ExternalOrder * order = new ExternalOrder(stocks_num, company_symbol, this-> id,0,total_money,std::bind(Client&::got_message,this));
+        this -> stock_exchange.bid_market(order);
     }
-    Client(unsigned int id, StockExchange& stock_exchange): id(id), stock_exchange(stock_exchange) {}
+    Client(unsigned int id, StockExchange& stock_exchange, currency_amount money_per_stock): id(id), stock_exchange(stock_exchange) {}
     
-    void Client::ask_market(CompanySymbol& company_symbol,stock_amount stocks_num)
+    void Client::ask_market(CompanySymbol& company_symbol,stock_amount stocks_num,currency_amount money_per_stock)
     {
-        Order order(stocks_num, company_symbol, id,  {} { this.got_message("example")}); 
+        ExternalOrder * order = new ExternalOrder(stocks_num, company_symbol, this-> id,money_per_stock,0,std::bind(Client&::got_message,this));
         this -> stock_exchange.ask_market(order);
     }
 
     void Client::buy_in_price(CompanySymbol& company_symbol,stock_amount stocks_num,currency_amount money_per_stock)
     {
-        this -> stock_exchange.buy_in_price(company_symbol,stocks_num,money_per_stock);
+        ExternalOrder * order = new ExternalOrder(stocks_num, company_symbol, this-> id,money_per_stock,money_per_stock*stocks_num,std::bind(Client&::got_message,this));
+        this -> stock_exchange.buy_in_price(order);
     }
 
     void Client::sale_in_price(CompanySymbol& company_symbol,stock_amount stocks_num,currency_amount money_per_stock)
     {
-        this -> stock_exchange.sale_in_price(company_symbol,stocks_num,money_per_stock);
+        ExternalOrder * order = new ExternalOrder(stocks_num, company_symbol, this-> id,money_per_stock,0,std::bind(Client&::got_message,this));
+        this -> stock_exchange.sale_in_price(order);
     }
 }

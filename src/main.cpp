@@ -1,8 +1,8 @@
 #include <chrono>
 #include <thread>
 
-#include "StockExchange.h"
-#include "Client.h"
+#include "StockExchange.hpp"
+#include "Client.hpp"
 
 enum ClientActions
 {
