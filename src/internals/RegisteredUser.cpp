@@ -1,87 +1,74 @@
+#ifndef REGISTERED_USER_CPP
+#define REGISTERED_USER_CPP
 #include "RegisteredUser.hpp"
+#include <stdexcept>
+#include "Transaction.hpp"
 
 namespace yaniv
 {
-    void RegisteredUser::add_money(unsigned int money, unsigned int card_id);
+    Transaction* RegisteredUser::start_transaction(currency_amount freezedMoney,currency_amount freezedStocks,StockExchangeSymbol stockEx, CompanySymbol company_symbol )
     {
-        std::string s = std::to_string(card_id);
-        if(s.length() != 16)
-        {
-            throw std::invalid_argument("Wrong card");
+        if(freezedStocks == 0) {
+            if(freezedMoney > this->money)
+            {
+                throw std::invalid_argument("do not have the needed money");
+            }
         }
-        this -> money += money; 
-    }
-    void RegisteredUser::start_transaction(currency_amount freezed)
-    {
-        if(freezed > this -> money)
+        else
         {
-            throw std::invalid_argument("do not have inafe money");
+            if(this->stocks.find({stockEx,company_symbol}) == this->stocks.end())
+            {
+                throw std::invalid_argument("do not have the needed stocks");
+            }
+            else if( this->stocks[{stockEx,company_symbol}] < freezedStocks)
+            {
+                throw std::invalid_argument("do not have the needed stocks");
+            }
         }
-        
-        this -> money -= freezed;
-        return Transaction T(freezed,this);
+
+        this->money -= freezedMoney;
+        this->stocks[{stockEx,company_symbol}] -= freezedStocks;
+        return new Transaction(freezedMoney,freezedStocks,this,stockEx,company_symbol);
     }
-    void RegisteredUser::add_money(unsigned int money);
+    currency_amount RegisteredUser::get_money()
     {
-        /*std::string s = std::to_string(card_id);
-        if(s.length() != 16)
-        {
-            throw std::invalid_argument("Wrong card");
-        }*/
-        this -> money += money; 
+        return this -> money;
     }
-    void RegisteredUser::take_money(unsigned int money);
+    void RegisteredUser::add_money(currency_amount additional_money)
     {
-        /*std::string s = std::to_string(card_id);  if you want this part you have to add card_id
-        if(s.length() != 16)
-        {
-            throw std::invalid_argument("Wrong card");
-        }*/
-        this -> money -= money; 
+        this->money += additional_money;
     }
-    void RegisteredUser::currency_amount get_money()
+    int RegisteredUser::take_money(currency_amount additional_money)
     {
-        return this->money;
-    }
-    void bid_market(CompanySymbol& company_symbol,stock_amount stocks_num, currency_amount total_money)
-    {
-        
-    } 
-    void ask_market(CompanySymbol& company_symbol,stock_amount stocks_num)
-    {
-        
-    }
-    void buy_in_price(CompanySymbol& company_symbol,stock_amount stocks_num)
-    {
-        
-    }
-    void sale_in_price(CompanySymbol& company_symbol,stock_amount stocks_num)
-    {
-        
-    }
-    void add_money(unsigned int additional_money)
-    {
-        money += additional_money
-    }
-    void take_money(unsigned int additional_money)
-    {
-        if(money + additional_money <  0)
+        if(this->money - additional_money <  0)
         {
             throw std::out_of_range("do not have the needed money");
         }
-        money -= additional_money;
+        this->money -= additional_money;
+        return additional_money;
     }
-    void add_stocks(unsigned int additional_stocks, CompanySymbol company_name)
+    void RegisteredUser::add_stocks(stock_amount additional_stocks,StockExchangeSymbol stock_exchange_name, CompanySymbol company_name)
     {
-        stocks[company_name] += additional_money;
+        std::pair<StockExchangeSymbol,CompanySymbol> name_pair = std::make_pair(stock_exchange_name,company_name);
+
+        auto it = stocks.find(name_pair);
+        int current_stocks = stocks.count(name_pair) ? 0 : stocks.at(name_pair);
+        this -> stocks[name_pair] = current_stocks + additional_stocks;
     }
-    void take_stocks(unsigned int additional_stocks, CompanySymbol company_name)
+    void RegisteredUser::take_stocks(stock_amount additional_stocks,StockExchangeSymbol stock_exchange_name, CompanySymbol company_name)
     {
-        if(money + additional_stocks <  0)
+        std::pair<StockExchangeSymbol,CompanySymbol> name_pair = std::make_pair(stock_exchange_name,company_name);
+
+        if(this->stocks.find(name_pair)  == this->stocks.end())
+        {
+            throw std::invalid_argument("the company does not exists");
+        }
+        if(this->stocks.find(name_pair)->second - additional_stocks <  0)
         {
             throw std::out_of_range("do not have the needed money");
         }
-        stocks[company_name] -= additional_stocks;
+        this -> stocks[name_pair] -= additional_stocks;
     }
 
 }
+#endif

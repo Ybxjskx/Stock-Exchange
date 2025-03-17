@@ -1,20 +1,23 @@
-
 #include "Position.hpp"
 
 namespace yaniv
 {
-    // void Podition::reduce_stocks(int stocks)
-    // {
-    //     amount_of_stocks -= stocks;
-    // }
-    
-    
-    bool Position::operator<(const Position& other)  {
-        return this->amount_per_stock < other.amount_per_stock;
+    stock_amount Position::get_available_amount() const
+    {
+        return this->amount;
     }
 
-    
-    bool Position::operator>(const Position& other) {
-        return this->amount_per_stock > other.amount_per_stock; 
+    void Position::reduce_stocks(stock_amount stocks)
+    {
+        this->amount -= stocks;
     }
+
+    bool Position::operator<(const Position& other) const{
+        return this->amount_per_stock < other.amount_per_stock;
+    }
+    
+    bool Position::operator>(const Position& other) const{
+        return this->amount_per_stock > other.amount_per_stock;
+    }
+
 }

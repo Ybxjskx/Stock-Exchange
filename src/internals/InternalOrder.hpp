@@ -14,32 +14,35 @@ public:
     // Members 
     const stock_amount amount;
     const CompanySymbol company_symbol;
+    const StockExchangeSymbol stock_exchange_symbol;
     const UserId user_id;
-    const currency_amount prize_per_stock;    
-    const currency_amount max_prize;
-    const std::function<void(CompanySymbol, currency_amount, stock_amount)> &notify;
+    const currency_amount price_per_stock;    
+    const currency_amount max_amount_money;
+    const std::function<void(currency_amount, stock_amount)> notify;
 
     // Constructors
     InternalOrder(
         stock_amount amount,
-        CompanySymbol company_symbol, 
+        CompanySymbol company_symbol,
+        StockExchangeSymbol stock_exchange_symbol,
         UserId user_id,
-        currency_amount prize_per_stock,
-        currency_amount max_prize,
-        const std::function<void(CompanySymbol, currency_amount, stock_amount)>& notify
-    ): amount(amount), company_symbol(company_symbol), user_id(user_id), 
-    prize_per_stock(prize_per_stock), max_prize(max_prize), notify(notify)
+        double price_per_stock,
+        currency_amount max_amount_money,
+        const std::function<void(currency_amount, stock_amount)>& notify
+    ): amount(amount),stock_exchange_symbol(stock_exchange_symbol), company_symbol(company_symbol), user_id(user_id),price_per_stock(price_per_stock),
+    max_amount_money(max_amount_money), notify(notify)
     {}
 
     InternalOrder(
-        const ExternalOrder& O,
-        std::function<void(CompanySymbol, currency_amount, stock_amount)> &notify
+        ExternalOrder& O,
+        std::function<void(currency_amount, stock_amount)> &notify
     ): InternalOrder(
-        O.amount,
+        O.stocks_num,
         O.company_symbol,
+        O.stock_exchange_symbol,
         O.user_id,
-        O.prize_per_stock,
-        O.max_prize,
+        O.price_per_stock,
+        O.max_amount_money,
         notify
     ) {};
 };

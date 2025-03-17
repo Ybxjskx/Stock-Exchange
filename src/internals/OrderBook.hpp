@@ -15,17 +15,19 @@ namespace yaniv
 class OrderBook
 {
 private:
-    std::mutex m;
+
 public:
-
-	unsigned int amount_of_stocks;
-	std::map<unsigned int, Position*> positions; 
-	max_heap<Position> asks;
+    std::mutex m;
+    std::string name;
+    //UserId id_of_the_host; 
+	std::map<unsigned int, Position> positions;
+	max_heap<Position> asks;// in the future need to change to map, for finding deals, and get max and min by a.begin and a.rend()
 	min_heap<Position> bids;
-
-	// Constructor
-	OrderBook(unsigned int amount_of_stocks): amount_of_stocks(amount_of_stocks) {}
-
+public:
+    OrderBook() = default;
+    OrderBook(const OrderBook&) = delete;
+    OrderBook& operator=(const OrderBook&) = delete;
+    OrderBook(std::string name):name(name){}
 	// Getters
 	currency_amount get_market_bid();
 	currency_amount get_market_ask();
@@ -33,10 +35,10 @@ public:
 
 	// Trading functions
 
-	InternalOrder bid_market(const InternalOrder& order);
-	InternalOrder bid_in_price(const InternalOrder& order);
-	InternalOrder ask_market(const InternalOrder& order);
-	InternalOrder ask_in_price(const InternalOrder& order);
+	double bid_market(InternalOrder& order);
+	void bid_in_price(InternalOrder& order);
+	int ask_market(InternalOrder& order);
+	void ask_in_price(InternalOrder& order);
 };
 }
 

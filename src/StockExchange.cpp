@@ -1,142 +1,87 @@
 #include "StockExchange.hpp"
 #include "shortcuts.hpp"
+#include <format>
 #include <string>
-#include "internals/Transaction.hpp"
-
+#include "internals/OrderBook.hpp"
+#include <stdexcept>
+#include <iostream>
 namespace yaniv
 {
 
-void StockExchange::add_company(CompanySymbol& company_symbol, stock_amount amount)
+void StockExchange::add_company(CompanySymbol& company_symbol,double price, int amount_stocks)
 {
-	if (this->book_orders_by_company_symbol.find(company_symbol) != std::end(this->book_orders_by_company_symbol))
+	if(this->book_orders_by_company_symbol.find(company_symbol) != std::end(this->book_orders_by_company_symbol))
 	{
-		throw std::invalid_argument("The company " + company_symbol + " is already exists");
+		throw std::invalid_argument("The company " + std::string(company_symbol) + " already exists");
 	}
 
-	OrderBook company_book_order(amount);
-	this->book_orders_by_company_symbol[company_symbol] = company_book_order;// replace with push for 
+	this->book_orders_by_company_symbol[company_symbol] = new OrderBook(company_symbol);
 
+	const std::function<void(currency_amount, stock_amount)> notify =
+	[](currency_amount amount, stock_amount stocks_take)
+	{
+		std::cout << "The original stock sold " << stocks_take
+				  << " stocks for " << amount << " currency units." << std::endl;
+	};
+
+	// יצירת הזמנה עם notify שהוגדרה
+	InternalOrder order(amount_stocks, company_symbol, this->name, 0, price, 0, notify);
+
+	// קריאה לפונקציה שמבצעת את המכירה ומדפיסה את ההודעה
+	this->book_orders_by_company_symbol[company_symbol]->ask_in_price(order);
 	// TODO: Add all stocks to comapny
-}
-void StockExchange::check_correct(const ExternalOrder& order)
+}void StockExchange::check_correct(InternalOrder&  order)
 {
-    if(this->users.find(order.user_id) == std::end(this->users))
+	if(this->book_orders_by_company_symbol.find(order.company_symbol) == std::end(this->book_orders_by_company_symbol))
 	{
-		throw std::invalid_argument("The user " + order.user_id + "is not exists");
-	}
-
-	if(this->comapnies.find(order.company_symbol) == std::end(this->book_orders_by_company_symbol))
-	{
-		throw std::invalid_argument("The company " + order.company_symbol + "is not exists");
+		std::cout<<"The company"+ order.company_symbol+ "is not exists";
+		throw std::invalid_argument("The company"+ order.company_symbol+ "is not exists");
 	}
 }
-void StockExchange::bid_market(const ExternalOrder& external_order)
+
+double StockExchange::bid_market(InternalOrder&  internal_order)
 {   
-	// check input 	
-	check_correct(order);
-
-	RegisteredUser * registered_user = this->users[external_order.user_id];
-    
-	InternalOrder internal_order(external_order, [&](int money_to_add, int stocks)
-    {
-        registered_user -> add_stocks(stocks, external_order.company_name);
-		std::string s = std::format("You buy {} stocks of the company {}, you gave {} money", stocks, external_order.company_symbol,money_to_add); 
-		external_order.notify(s);
-    }); 
-
 	// check input
-	OrderBook* book_order = this->book_orders_by_company_symbol[company_symbol];
+
+	check_correct(internal_order);
+
+	OrderBook * book_order = this -> book_orders_by_company_symbol[internal_order.company_symbol];
 	// freeze money
-	Transaction transaction = registered_user->start_transaction(order.max_amount_money);
-    try
-	{
-	    //return money
-		int money_to_give_back = book_order->bid_market(external_order);
-	    transaction.settle(money_to_give_back);
-	}
-    catch(...)
-	{
-		transaction.rollback();
-	}
+
+	double money_to_give_back = book_order->bid_market(internal_order);
+    return money_to_give_back;
 }
-void StockExchange::ask_market(const ExternalOrder& external_order)
+int StockExchange::ask_market(InternalOrder& internal_order)
 {
-	this->check_correct(external_order);
+	check_correct(internal_order);
 
-	RegisteredUser* registered_user = this->users[user_id];
+	OrderBook * book_order = this -> book_orders_by_company_symbol[internal_order.company_symbol];
 
-	InternalOrder internal_order(external_order, [&](int money_to_add, int stocks_take)
-    {
-		registered_user -> take_money(money_to_add);
-        registered_user -> add_stocks(stocks, company_name);
-		std::string s = std::format("You sold {} stocks of the company {}, you got {} money", stocks_take, external_order.company_symbol,money_to_add); 
-		external_order.notify(s);
-    });
+    int stocks_to_return = book_order->ask_market(internal_order);
 
+	return stocks_to_return;
+
+}
+
+void StockExchange::bid_in_price(InternalOrder& internal_order)
+{	// check input
+
+    check_correct(internal_order);
+
+	OrderBook * book_order = this->book_orders_by_company_symbol[internal_order.company_symbol];
+
+	book_order -> bid_in_price(internal_order);
+}
+void StockExchange::ask_in_price(InternalOrder& internal_order)
+{
 	// check input
-	OrderBook * book_order = this->book_orders_by_company_symbol[external_order.company_symbol];
+
+	this->check_correct(internal_order);
+
+	OrderBook* book_order = this->book_orders_by_company_symbol[internal_order.company_symbol];
     
-	book_order->ask_market(internal_order);
+    book_order->ask_market(internal_order);
 }
 
-void StockExchange::bid_in_price(const ExternalOrder& external_order)
-{
-	check_correct(external_order);
 
-    InternalOrder internal_order(external_order, [&](int money_to_add, int stocks_take)
-    {
-        registered_user -> add_stocks(stocks, company_name);
-		std::string s = std::format("You buy {} stocks of the company {}, you gave {} money", stocks_take, external_order.company_symbol,money_to_add); 
-		external_order.notify(s);
-    });
-	RegisteredUser * registered_user = this->users[external_order.user_id];
-
-	// check input
-	OrderBook * book_order = this->book_orders_by_company_symbol[external_order.company_symbol];
-	Transaction transaction = registered_user->start_transaction(internal_order.max_amount_money);
-	//it will not work beacuse transaction is depende 
-    try
-	{
-		// freeze money
-		book_order -> bid_in_price(internal_order);
-	}
-    catch(...)
-	{
-		transaction.rollback();	 
-		throw std::exception("error, the function did not work, but every thing is okay, we gave you the money back, please try again later");
-	}
-}
-void StockExchange::ask_in_price(ExternalOrder& external_order)
-{
-	this->check_correct(external_order);
-	
-	RegisteredUser * registered_user = this->users[external_order.user_id];
-
-	// check input
-
-	OrderBook* book_order = this->book_orders_by_company_symbol[external_order.company_symbol];
-    
-	try
-	{
-		book_order->ask_market(external_order); 
-	}
-	catch(const std::Exception & e)
-	{
-		throw e;
-	}
-	catch(...)
-	{
-		throw std::exception("unexcepted error");
-	}
-}
-Client * StockExchange::add_user(UserId& user_id)
-{
-	if(this->users.find(user_id) != std::end(this->users))
-	{
-		throw std::invalid_argument("The user " + user_id + " is exists");
-	}
-    RegisteredUser new_user(user_id);
-	users[user_id] = new_user;
-	return new_user.Client;
-}
 }

@@ -13,9 +13,10 @@ using min_heap = std::priority_queue<t, std::vector<t>, std::greater<t>>;
 template<typename t>
 using max_heap = std::priority_queue<t>;
 
-using currency_amount = unsigned int;
+using currency_amount = double;
 using stock_amount = unsigned int;
 
+using StockExchangeSymbol = const std::string;
 using CompanySymbol = const std::string;
 using UserId = unsigned int;
 

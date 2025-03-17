@@ -6,33 +6,32 @@
 #include <mutex>
 #include "internals/RegisteredUser.hpp"
 #include "internals/OrderBook.hpp"
-#include "shortcuts.hpp"
-#include "externals/ExternalOrder.hpp"
 
 namespace yaniv
 {
 
 class StockExchange
 {
-private: 
+private:
+public:
 	// Members
-	const std::string name;
-	std::map<CompanySymbol, OrderBook> book_orders_by_company_symbol;
-    std::map<UserId, RegisteredUser> users;
+	std::map<CompanySymbol, OrderBook*> book_orders_by_company_symbol;
+    std::map<UserId, RegisteredUser*> users;
+    inline void check_correct(InternalOrder&  order);
 
 public:
     // Constructors
-	StockExchange(const std::string& name): name(name) {}
-
+	StockExchange(StockExchangeSymbol& name): name(name) {}
 	// Initialization
-	void add_company(CompanySymbol& company_symbol, stock_amount amount);
-    Client* add_user(UserId user_id, const std::string& name);
+	void add_company(CompanySymbol& company_symbol,double price, int amount_stocks);
+
 	
     // Market Actions
-	void bid_market(const ExternalOrder& order);
-    void ask_market(const ExternalOrder& order);
-    void bid_in_price(const ExternalOrder& order);
-    void ask_in_price(const ExternalOrder& order);
+	double bid_market(InternalOrder & order);
+    int ask_market(InternalOrder & order);
+    void bid_in_price(InternalOrder& order);
+    void ask_in_price(InternalOrder& order);
+	StockExchangeSymbol name;
 
 private:
     void check_correct(ExternalOrder& order);
