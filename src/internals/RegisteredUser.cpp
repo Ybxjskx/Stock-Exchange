@@ -3,7 +3,6 @@
 #include "RegisteredUser.hpp"
 #include <stdexcept>
 #include "Transaction.hpp"
-
 namespace yaniv
 {
     Transaction* RegisteredUser::start_transaction(currency_amount freezedMoney,currency_amount freezedStocks,StockExchangeSymbol stockEx, CompanySymbol company_symbol )
@@ -50,9 +49,8 @@ namespace yaniv
     void RegisteredUser::add_stocks(stock_amount additional_stocks,StockExchangeSymbol stock_exchange_name, CompanySymbol company_name)
     {
         std::pair<StockExchangeSymbol,CompanySymbol> name_pair = std::make_pair(stock_exchange_name,company_name);
-
         auto it = stocks.find(name_pair);
-        int current_stocks = stocks.count(name_pair) ? 0 : stocks.at(name_pair);
+        int current_stocks = stocks.count(name_pair) ? stocks.at(name_pair): 0;
         this -> stocks[name_pair] = current_stocks + additional_stocks;
     }
     void RegisteredUser::take_stocks(stock_amount additional_stocks,StockExchangeSymbol stock_exchange_name, CompanySymbol company_name)
