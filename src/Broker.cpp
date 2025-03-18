@@ -8,7 +8,6 @@
 #include <random>
 #include <format>
 #include "internals/Transaction.hpp"
-#include <iostream>
 namespace yaniv
 {
       Client* Broker::addUser()
@@ -139,7 +138,7 @@ namespace yaniv
             // freeze money
             transaction->settleStocks( stock_exchange -> ask_market(internal_order) );
         }
-        catch(...)
+        catch(std::exception & e)
         {
             transaction->rollback();
             throw std::invalid_argument("error, the function did not work, but every thing is okay, we gave you the money back, please try again later");
@@ -152,11 +151,11 @@ namespace yaniv
         check_order(external_order);
         RegisteredUser * registered_user = this->users[external_order.user_id];
 
-        std::function<void(currency_amount, stock_amount)> notify =  [&](currency_amount money_to_add, stock_amount stocks_take)
+        std::function<void(currency_amount, stock_amount)> notify =  [=](currency_amount money_to_add, stock_amount stocks_take)
           {
-              registered_user->add_stocks(stocks_take,external_order.stock_exchange_symbol ,external_order.company_symbol);
-              std::string s = std::format("You buy {} stocks of the company {} from the stock exchange {}, you gave {} money", stocks_take, external_order.company_symbol,external_order.stock_exchange_symbol,money_to_add);
-              external_order.notify(s);
+            registered_user->add_stocks(stocks_take,external_order.stock_exchange_symbol ,external_order.company_symbol);
+            std::string s = std::format("You buy {} stocks of the company {} from the stock exchange {}, you gave {} money", stocks_take, external_order.company_symbol,external_order.stock_exchange_symbol,money_to_add);
+            external_order.notify(s);
           };
 
 
