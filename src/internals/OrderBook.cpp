@@ -1,6 +1,5 @@
 #include <cmath>
 #include "OrderBook.hpp"
-#include <iostream>
 
 namespace yaniv
 {
@@ -71,24 +70,18 @@ int OrderBook::ask_market(InternalOrder& order)
     stock_amount stock_left = order.amount;
 
     m.lock();   // start the function therefore must lock 
-    //std::cout<<1;
     while(!this->bids.empty() && stock_left > 0)
     {
-        //std::cout<<2;
+
         // Get head
         const Position& bid_position = this->bids.top();
-        
         // Calculate amount to bid
-        //std::cout<<3;
         stock_amount amount_sold_in_this_position =
             std::min(stock_left, bid_position.get_available_amount());
-        //std::cout<<4;
         currency_amount amount_got_from_this_bid = amount_sold_in_this_position * bid_position.amount_per_stock;
-        //std::cout<<5;
         // notify position
         bid_position.notify(amount_got_from_this_bid,amount_sold_in_this_position);
 
-        //std::cout<<6;
         if (bid_position.get_available_amount() < 1)
         {
             this->bids.pop();
@@ -99,7 +92,6 @@ int OrderBook::ask_market(InternalOrder& order)
     }
 
     order.notify(money_got, order.amount - stock_left);
-    std::cout<<1;
     m.unlock();   // end the function therefore must unlock
     return stock_left;
 }
@@ -192,8 +184,6 @@ void OrderBook::ask_in_price(InternalOrder& order)
     order.notify(money_got,order.amount - stock_left);
  
     Position p(stock_left, amount_money_per_stock, order.notify);
-
     asks.push(p);
     m.unlock();  // end the function therefore must unlock
-}
 }
