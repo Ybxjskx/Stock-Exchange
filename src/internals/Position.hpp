@@ -8,7 +8,7 @@
 namespace yaniv
 {
 class Position
-{//  positions is visitor, 
+{//  positions is visitor,
 
 public:
     currency_amount amount_per_stock;
